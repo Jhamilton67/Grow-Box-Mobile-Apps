@@ -63,6 +63,10 @@ int redValue;
 int greenValue;
 int blueValue;
 
+// Declaring global variables for the photoresistor
+int RGBlight = A5;
+int photoresistor = A0;
+int analogValue; 
 // Function that can be called from the Particle console
 void DHTreadSensor() {
     hum = dht.getHumidity();
@@ -75,9 +79,23 @@ DHTreadSensor();
 return 1;
 }
 
+void PhotoResistor()
+{
+    analogValue = analogRead(photoresistor);
+    
+    if (analogValue > 15) 
+    {
+        digitalWrite(RGBlight, LOW);
+    }
+    else
+    {
+        digitalWrite(RGBlight, HIGH);
+    }
+}
+
 void RGBfan()
 {
-     redValue = 255;
+    redValue = 255;
     greenValue = 0;
     blueValue = 0;
     
@@ -168,7 +186,7 @@ void setup() {
      dht.begin();
     
     lcd.begin(16,2);//The aspect ration of the Screen
-    lcd.print("Welcome, this is the current status of the Grow Box");//A message that will show on the LCD Screen.
+    lcd.print("Welcome, this is the current status of the Grow Box...");//A message that will show on the LCD Screen.
 
     // Declare variables for the DHT22 temp and hum sensor.
     Particle.variable("temperature", temp);
@@ -197,6 +215,7 @@ void loop() {
     
     Blynk.run();
     DHT22Sensor();
+    PhotoResistor();
     RGBfan();
     WaterSystem();
     LCDScreen();
