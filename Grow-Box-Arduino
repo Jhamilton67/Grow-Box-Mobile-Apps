@@ -1,0 +1,117 @@
+/**********************************************************
+ * Jake Hamilton Mobile Apps Assesment 2 
+ * Date: 25/5/21
+**********************************************************/
+#define APP_Name "GrowBox Monitoring System"
+String VERSION = "Version 2.0";
+/********************************************************
+ * Libraries
+********************************************************/
+#include "DHT.h"//adafruit libary 
+/***********************************************************
+ * DHT Sensor Variables
+**********************************************************/
+#define DHTPIN 2//for the connection of the DHT-11's data pin 
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+/***********************************************************
+ * Water Level Sensor Variables
+**********************************************************/
+const int sensorPin=0;//sensor pin connected to analog pin A1
+int liquid_level;
+/********************************************************
+ * UltraSonic Range Sensor Variables
+********************************************************/
+//int trig_pin = 12;
+//int ech_pin = 11;
+//SR04 sensor = SR04(echo_pin,trig_pin);
+//long distance;
+/*******************************************************
+ * Self watering system and Moisture sensor
+******************************************************/
+int IN2 = 3;
+int Pin1 = A0;
+float Value1 = 0;
+
+void DHTSensor()
+{
+  delay(2000);//this delays the seconds of each reading 
+
+  float h = dht.readHumidity();//reads the data 
+
+  float t = dht.readTemperature();//reads the data 
+
+  Serial.print("Humidty: ");
+  Serial.print(h);
+  Serial.print("% Temperature: ");
+  Serial.print(t);
+  Serial.print("C");
+
+}
+
+void WaterLevelSensor()
+{
+  liquid_level= analogRead(sensorPin); //arduino reads the value from the liquid level sensor
+  Serial.print("Water Level: ");
+  Serial.println(liquid_level);//prints out liquid level sensor reading
+  delay(500);//delays 100ms
+}
+
+void UltrasonicRangeSensor()
+{
+  //distance = sensor.Distance();
+  //Serial.print("Water range:");
+  //Serial.Println(distance);
+  //delay(1000);
+}
+
+void WaterAutomationSystem()
+{
+  Serial.print("Moisture Level:"); 
+  Value1 = analogRead(Pin1);
+  Serial.println(Value1);
+
+  if(Value1>750)
+  {
+    digitalWrite(IN2, LOW);
+  }
+  else
+  {
+    digitalWrite(IN2, HIGH);
+  }
+  Serial.println();
+
+  delay(1000);
+}
+
+void setup() {
+  
+  Serial.begin(9600);
+  Serial.println("Humidity and Temperature");
+  
+  dht.begin();
+
+  Serial.begin(9600); 
+  pinMode(sensorPin, INPUT);//the liquid level sensor will be an input to the arduino
+
+//UltraSonic range sensor setup code
+  //Serial.begin(9600);
+  //delay(1000);
+
+  Serial.begin(9600);
+  pinMode(IN2, OUTPUT);
+  pinMode(Pin1, INPUT);
+  digitalWrite(IN2, HIGH);
+  delay(500);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  DHTSensor();
+  WaterLevelSensor();
+  //UltrasonicRangeSensor();
+  WaterAutomationSystem();
+  
+}
