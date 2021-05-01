@@ -1,0 +1,177 @@
+
+/**********************************************************
+ * Jake Hamilton Mobile Apps Assesment 2 
+ * Date: 25/5/21
+**********************************************************/
+#define APP_Name "GrowBox Monitoring System"
+String VERSION = "Version 2.0";
+/********************************************************
+ * Libraries
+********************************************************/
+#include "DHT.h"//adafruit libary 
+#include <Blynk.h>//Blynk Libary that links to my UI on the Blynk App
+#include <LiquidCrystal.h>
+//#include <HC_SR04.h> // need to test if it works first 
+
+/***********************************************************
+ * Blynk Setup
+**********************************************************/
+#define USE_BLYNK
+#ifdef USE_BLYNK
+char auth_key ="";//The auth key that is from my Blynk UI token.
+#define BLYNK_PRINT Serial
+#define BLYNK_DEBUG
+#endif
+/***********************************************************
+ * DHT Sensor Variables
+**********************************************************/
+#define DHTPIN 2//for the connection of the DHT-11's data pin 
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+/***********************************************************
+ * Water Level Sensor Variables
+**********************************************************/
+const int sensorPin=0;//sensor pin connected to analog pin A1
+int liquid_level;
+/********************************************************
+ * UltraSonic Range Sensor Variables
+********************************************************/
+//int trig_pin = 12;
+//int ech_pin = 11;
+//SR04 sensor = SR04(echo_pin,trig_pin);
+//long distance;
+/*******************************************************
+ * Self watering system and Moisture sensor variables
+******************************************************/
+int IN2 = 3;
+int Pin1 = A0;
+float Value1 = 0;
+/******************************************************
+ * LCD Screen Variables 
+*****************************************************/
+LiquidCrystal Lcd(7, 8, 9, 10, 11, 12);
+/****************************************************
+ * Fan Variables
+***************************************************/
+const int Relay_Pin = A5;
+
+/**************************************************
+ * LightSensor Variables
+*************************************************/
+int LightSensorPin = A2;
+int LightSensorValue = 0;
+
+void DHTSensor()
+{
+  delay(2000);//this delays the seconds of each reading 
+
+  float h = dht.readHumidity();//reads the data 
+
+  float t = dht.readTemperature();//reads the data 
+
+  Serial.print("Humidty: ");
+  Serial.print(h);
+  Serial.print("% Temperature: ");
+  Serial.print(t);
+  Serial.print("C");
+
+}
+
+void WaterLevelSensor()
+{
+  liquid_level= analogRead(sensorPin); //arduino reads the value from the liquid level sensor
+  Serial.print("Water Level: ");
+  Serial.println(liquid_level);//prints out liquid level sensor reading
+  delay(500);//delays 100ms
+}
+
+void UltrasonicRangeSensor()
+{
+  //distance = sensor.Distance();
+  //Serial.print("Water range:");
+  //Serial.Println(distance);
+  //delay(1000);
+}
+
+void WaterAutomationSystem()
+{
+  Serial.print("Moisture Level:"); 
+  Value1 = analogRead(Pin1);
+  Serial.println(Value1);
+
+  if(Value1>750)
+  {
+    digitalWrite(IN2, LOW);
+  }
+  else
+  {
+    digitalWrite(IN2, HIGH);
+  }
+  Serial.println();
+
+  delay(1000);
+}
+
+void LCDScreen()
+{
+  Lcd.setCursor(0, 2);
+}
+
+void Fan()
+{
+  digitalWrite(Relay_Pin, HIGH);
+
+  digitalWrite(Relay_Pin, LOW);
+}
+
+void LightSensor()
+{
+ LightSensorValue = analogRead(LightSensorPin);
+ Serial.print("Light level: ");
+ Serial.println(LightSensorValue);
+ delay(500);
+}
+
+void setup() {
+//DHT11 Sensor Setup
+  Serial.begin(9600);
+  Serial.println("Humidity and Temperature");
+  
+  dht.begin();
+//Water level sensor Setup
+  Serial.begin(9600); 
+  pinMode(sensorPin, INPUT);//the liquid level sensor will be an input to the arduino
+
+//UltraSonic range sensor setup code
+  //Serial.begin(9600);
+  //delay(1000);
+//WaterAutomationSystem Setup
+  Serial.begin(9600);
+  pinMode(IN2, OUTPUT);
+  pinMode(Pin1, INPUT);
+  digitalWrite(IN2, HIGH);
+  delay(500);
+//LCD screen Setup
+  Lcd.begin(16, 2);
+  Lcd.print("GrowBox Status...");
+//LightSensor Setup
+  Serial.begin(9600);
+
+  pinMode(Relay_Pin, OUTPUT);
+
+  //Serial.begin(9600);
+  //Blynk.begin(auth_Key, Serial);
+
+}
+
+void loop() {
+  
+  //Blynk.run();
+  DHTSensor();
+  WaterLevelSensor();
+  LCDScreen();
+  LightSensor();
+  Fan();
+  //UltrasonicRangeSensor();
+  WaterAutomationSystem();
+}
