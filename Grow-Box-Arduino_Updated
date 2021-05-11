@@ -1,0 +1,197 @@
+/**********************************************************
+ * Jake Hamilton Mobile Apps Assesment 2 
+ * Date: 25/5/21
+**********************************************************/
+#define APP_Name "GrowBox Monitoring System"
+String VERSION = "Version 2.0";
+/********************************************************
+ * Libraries
+********************************************************/
+#include "DHT.h"//adafruit libary 
+#include <Blynk.h>//Blynk Libary that links to my UI on the Blynk App
+#include <LiquidCrystal.h> // Libary that i use for LCD screen 
+#include <BlynkSimpleStream.h>// The Libary that Helps me to push my data to the Blynk app which is my UI. 
+#include <SoftwareSerial.h> //Libary that i would use for my Rx Tx pins on the MCU Board. 
+//#include <ESP8266_Lib.h> // This would be the libary that i would use if i got the ESP-01 working
+/***********************************************************
+ * Blynk Setup
+**********************************************************/
+#define BLYNK_PRINT SwSerial
+#define USE_BLYNK
+#ifdef USE_BLYNK
+char auth_key[] ="igfL-h9bNmKVzyVeLUpkXjelGRcVe5hh";//The auth key that is from my Blynk UI token.//My blynk app token 
+#define BLYNK_PRINT Serial
+#define BLYNK_DEBUG
+#endif
+/**********************************************************
+ * ESP-01 Variables 
+*********************************************************/
+#define ESP8266_BAUD 9600
+char ssid[] = "Add WIFI name" ;//to connect to my wifi 
+char Wifi_password[] = " Add WIFI Password";
+
+SoftwareSerial EspSerial(2, 3); //RX, TX//
+
+//ESP8266 WI-FI_connect(&EspSerial); 
+/***********************************************************
+ * DHT Sensor Variables
+**********************************************************/
+#define DHTPIN 2//for the connection of the DHT-11's data pin 
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+/***********************************************************
+ * Water Level Sensor Variables
+**********************************************************/
+const int sensorPin=0;//sensor pin connected to analog pin A1
+int liquid_level;
+/********************************************************
+ * UltraSonic Range Sensor Variables
+********************************************************/
+//int trig_pin = 5;//Code that i would use if i got my Ultrasonic working 
+//int ech_pin = 6;
+//SR04 sensor = SR04(echo_pin,trig_pin);
+//long distance;
+/*******************************************************
+ * Self watering system and Moisture sensor variables
+******************************************************/
+int IN2 = 3;
+int Pin1 = A0;
+float Value1 = 0;
+/******************************************************
+ * LCD Screen Variables 
+*****************************************************/
+LiquidCrystal Lcd(7, 8, 9, 10, 11, 12);
+/****************************************************
+ * Fan Variables
+***************************************************/
+const int Relay_Pin = A5;
+/**************************************************
+ * LightSensor Variables
+*************************************************/
+int LightSensorPin = A2;
+int LightSensorValue = 0;
+
+void DHTSensor()
+{
+  delay(2000);//this delays the seconds of each reading 
+
+  float h = dht.readHumidity();//reads the data 
+
+  float t = dht.readTemperature();//reads the data 
+
+  Serial.print("Humidty: ");//prints Hum
+  Serial.print(h);
+  Serial.print("% Temperature: ");//prints Temp 
+  Serial.print(t);
+  Serial.print("C");
+
+  Blynk.virtualWrite(V5, t);//Test code to see if i could connect my DHT sensor to blynk 
+  Blynk.virtualWrite(V6, h);
+}
+
+void WaterLevelSensor()
+{
+  liquid_level= analogRead(sensorPin); //arduino reads the value from the liquid level sensor
+  Serial.print("Water Level: ");//prints water level 
+  Serial.println(liquid_level);//prints out liquid level sensor reading
+  delay(500);//delays 100ms
+
+  //Blynk.virtualWrite(A1);
+ 
+}
+
+void UltrasonicRangeSensor()
+{
+  //distance = sensor.Distance();
+  //Serial.print("Water range:");
+  //Serial.Println(distance);
+  //delay(1000);
+}
+
+void WaterAutomationSystem()
+{
+  Serial.print("Moisture Level:"); // prints Moisture level 
+  Value1 = analogRead(Pin1);//takes the data from pin 1 and stores it as value 1 
+  Serial.println(Value1);//pin data is printed 
+
+  if(Value1>650)//value that the moistrue sensor has to read to switch the pump on 
+  {
+    digitalWrite(IN2, LOW);//relay will be on low power when watering 
+  }
+  else
+  {
+    digitalWrite(IN2, HIGH);//relay will be on high. 
+  }
+  Serial.println();//prints the serial value on screen 
+
+  delay(1000);//delayed 200ms 
+}
+
+void LCDScreen()
+{
+  Lcd.setCursor(0, 2);//2 lines
+}
+
+void Fan()
+{
+  digitalWrite(Relay_Pin, HIGH);//The fan will run high 
+
+  digitalWrite(Relay_Pin, LOW);//the fan will slow down 
+}
+
+void LightSensor()
+{
+ LightSensorValue = analogRead(LightSensorPin);//light sensor reads the data 
+ Serial.print("Light level: ");//the data is outputed 
+ Serial.println(LightSensorValue);//the stored data is shown here. 
+ delay(500);//delayed for 100ms 
+}
+
+void setup() {
+//DHT11 Sensor Setup
+  Serial.begin(9600);
+  Serial.println("Humidity and Temperature");// Prints the line 
+ 
+  dht.begin();
+//Water level sensor Setup
+  Serial.begin(9600); 
+  pinMode(sensorPin, INPUT);//the liquid level sensor will be an input to the arduino
+
+//UltraSonic range sensor setup code
+  //Serial.begin(9600);
+  //delay(1000);
+  
+//WaterAutomationSystem Setup
+  Serial.begin(9600);
+  pinMode(IN2, OUTPUT);
+  pinMode(Pin1, INPUT);
+  digitalWrite(IN2, HIGH);
+  delay(500);//delays the code and output 
+  
+//LCD screen Setup
+  Lcd.begin(16, 2);//screen size 
+  Lcd.print("Status on Blynk..");//message that will go the LCD screen 
+  
+//LightSensor Setup
+  Serial.begin(9600);//9600 BAUD startup
+  
+//Fan Setup 
+  pinMode(Relay_Pin, OUTPUT);// fan Output for it to work 
+ 
+//Blynk UI setup 
+  //Serial.begin(9600);
+  //EspSerial.begin(ESP8266_BAUD);
+  //Blynk.begin(Serial, auth_key, WI-FI_connect, ssid, Wifi_password);//This connects all of these variables together to get my MCU connected to the wifi then to the blynk app. 
+  
+}
+
+void loop() {
+  
+  //Blynk.run();//Blynk app method
+  DHTSensor();//DHT sensor Method
+  WaterLevelSensor();// WaterLevelSeons method
+  LCDScreen();//LCD screen method
+  LightSensor();//Light Sensor method
+  Fan();//Fan method
+  //UltrasonicRangeSensor();
+  WaterAutomationSystem();//Water automation method, this is for the fan and the soil Moisture sensor.  
